@@ -27,13 +27,15 @@ jobs:
 
       - name: Clone target repository
         run: |
-          git clone --branch=${{ inputs.branch }} ${{ inputs.repository_url }} target-repo
+          git clone --depth=1 --branch=${{ inputs.branch }} ${{ inputs.repository_url }} target-repo
+          ls -alh
+          du -sh target-repo
 
       - name: Create archive
         run: |
           cd target-repo
           tar -czf ../repository-archive.tar.gz .
-          ls -alh ../
+          ls -alh../repository-archive.tar.gz .
           cd ..
 
       - name: Upload to Release
