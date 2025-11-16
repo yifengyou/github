@@ -44,13 +44,13 @@ jobs:
           split_threshold=1990000000
 
           if [ $dir_size -gt $split_threshold ]; then
-          echo "Directory exceeds 1.8GB, creating split archives..."
-          # 创建分卷压缩，每个1.8G
-          tar -czf - . | split -d -b 1.8G - ../repository-archive.tar.gz.part.
+          echo "Directory exceeds 1900MB, creating split archives..."
+          # 创建分卷压缩，每个1900M
+          tar -czf - . | split -d -b 1900M - ../repository-archive.tar.gz.part.
           echo "has_split=true" >> $GITHUB_OUTPUT
           echo "Split archives created"
           else
-          echo "Directory under 1.8GB, creating single archive..."
+          echo "Directory under 1900MB, creating single archive..."
           tar -czf ../repository-archive.tar.gz .
           echo "has_split=false" >> $GITHUB_OUTPUT
           echo "Single archive created"
