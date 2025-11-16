@@ -1,0 +1,44 @@
+name: Download and Archive GitHub Repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository_url:
+        description: "GitHub repository URL to download"
+        required: true
+        type: string
+      branch:
+        description: "Branch to clone"
+        required: false
+        default: "main"
+        type: string
+      tag_name:
+        description: "Release tag name"
+        required: true
+        type: string
+
+jobs:
+  download-and-archive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clone target repository
+        run: |
+          git clone --depth=1 --branch=${{ inputs.branch }} ${{ inputs.repository_url }} target-repo
+
+      - name: Create archive
+        run: |
+          cd target-repo
+          tar -czf ../repository-archive.tar.gz .
+          cd ..
+
+      - name: Upload to Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ inputs.tag_name }}
+          artifacts: "repository-archive.tar.gz"
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
