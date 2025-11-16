@@ -1,10 +1,10 @@
-name: Download and Archive GitHub Repository
+name: Quick Download GitHub Repo
 
 on:
   workflow_dispatch:
     inputs:
       repository_url:
-        description: "GitHub repository URL to download"
+        description: "Quick Download Repo"
         required: true
         type: string
       branch:
@@ -27,7 +27,7 @@ jobs:
 
       - name: Clone target repository
         run: |
-          git clone --depth=1 --branch=${{ inputs.branch }} ${{ inputs.repository_url }} target-repo
+          git clone --branch=${{ inputs.branch }} ${{ inputs.repository_url }} target-repo
 
       - name: Create archive
         run: |
