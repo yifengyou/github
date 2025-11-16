@@ -33,6 +33,7 @@ jobs:
         run: |
           cd target-repo
           tar -czf ../repository-archive.tar.gz .
+          ls -alh ../
           cd ..
 
       - name: Upload to Release
