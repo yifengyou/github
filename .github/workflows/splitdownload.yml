@@ -1,0 +1,71 @@
+name: Full Download GitHub Repo Split
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository_url:
+        description: "Full Download Repo Split"
+        required: true
+        type: string
+      branch:
+        description: "Branch to clone"
+        required: false
+        default: "main"
+        type: string
+      tag_name:
+        description: "Release tag name"
+        required: true
+        type: string
+
+jobs:
+  download-and-archive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clone target repository
+        run: |
+          git clone --branch=${{ inputs.branch }} ${{ inputs.repository_url }} target-repo
+          ls -alh
+          du -sh target-repo
+
+      - name: Create archive with split if needed
+        id: archive
+        run: |
+          cd target-repo
+
+          # 检查目录大小
+          dir_size=$(du -sb . | cut -f1)
+          echo "Directory size: $dir_size bytes"
+
+          # 设置分卷阈值 (10GB)
+          split_threshold=1000000000
+
+          if [ $dir_size -gt $split_threshold ]; then
+          echo "Directory exceeds 1GB, creating split archives..."
+          # 创建分卷压缩，每个1G
+          tar -czf - . | split -d -b 1G - ../repository-archive.tar.gz.part.
+          echo "has_split=true" >> $GITHUB_OUTPUT
+          echo "Split archives created"
+          else
+          echo "Directory under 1GB, creating single archive..."
+          tar -czf ../repository-archive.tar.gz .
+          echo "has_split=false" >> $GITHUB_OUTPUT
+          echo "Single archive created"
+          fi
+          cd ..
+
+      - name: List created files
+        run: |
+          echo "Created archive files:"
+          ls -alh
+
+      - name: Upload to Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ inputs.tag_name }}
+          artifacts: ${{ steps.archive.outputs.has_split == 'true' && 'repository-archive.tar.gz.part.*' || 'repository-archive.tar.gz' }}
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
