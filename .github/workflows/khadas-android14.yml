@@ -49,7 +49,7 @@ jobs:
             flex bison build-essential zip curl  \
             zlib1g-dev gcc-multilib g++-multilib \
             libc6-dev-i386 x11proto-core-dev \
-            unzip sudo
+            unzip sudo rar
           git config --global user.name yifengyou
           git config --global user.email 842056007@qq.com
 
@@ -66,51 +66,35 @@ jobs:
           ./repo init -u https://github.com/khadas/android_manifest.git -b khadas-edge2-android14
           ls -alh
           MAX_RETRIES=30
-          retry_count=0
-          while [ $retry_count -lt $MAX_RETRIES ]; do
+          RETRY_COUNT=0
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             .repo/repo/repo sync -v -c -j8 -n --no-tags --no-clone-bundle | tee -a /builder/khadas-android14.log
             if [ $? -eq 0 ];then
               break
             else
-              retry_count=$((retry_count + 1))
+              RETRY_COUNT=$((RETRY_COUNT + 1))
               ls -alh
               du -sh *
               df -h
             fi
           done
 
-      - name: Create archive with split if needed
+      - name: Create archive with split
         working-directory: /builder
         id: archive
         run: |
-          cd android14
-
-          # 检查目录大小
-          dir_size=$(du -sb . | cut -f1)
-          echo "Directory size: $dir_size bytes"
-
-          # 设置分卷阈值 (10GB)
-          split_threshold=1000000000
-
-          if [ $dir_size -gt $split_threshold ]; then
-          echo "Directory exceeds 1GB, creating split archives..."
-          # 创建分卷压缩，每个1G
-          tar -czf - . | split -d -b 1G - ../khadas-android14.tar.gz.part.
-          echo "has_split=true" >> $GITHUB_OUTPUT
-          echo "Split archives created"
-          else
-          echo "Directory under 1GB, creating single archive..."
-          tar -czf ../khadas-android14.tar.gz .
-          echo "has_split=false" >> $GITHUB_OUTPUT
-          echo "Single archive created"
-          fi
-          cd ..
+          ls -alh ./*
+          du -sh *
+          df -h
+          rar a -v1g khadas-android14.rar android14
+          ls -alh /builder/*
 
       - name: List created files
         working-directory: /builder
         run: |
           echo "Created archive files:"
-          ls -alh
+          df -h
+          ls -alh ./*
 
       - name: Upload Kernel to Release
         uses: ncipollo/release-action@main
