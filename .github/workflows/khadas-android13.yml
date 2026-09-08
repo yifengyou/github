@@ -9,7 +9,7 @@ on:
 
 jobs:
   khadas-android13:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -82,10 +82,13 @@ jobs:
         working-directory: /builder
         id: archive
         run: |
+          set -xe
           ls -alh ./*
           df -h
           rar a -v1g khadas-android13.rar android13
           ls -alh /builder/*
+          ls -alh ./*
+          df -h
 
       - name: List created files
         working-directory: /builder

@@ -9,7 +9,7 @@ on:
 
 jobs:
   khadas-android12:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -68,7 +68,7 @@ jobs:
           MAX_RETRIES=30
           RETRY_COUNT=0
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            .repo/repo/repo sync -v -c -j8 -n --no-tags --no-clone-bundle | tee -a /builder/khadas-android14.log
+            .repo/repo/repo sync -v -c -j8 -n --no-tags --no-clone-bundle | tee -a /builder/khadas-android12.log
             if [ $? -eq 0 ];then
               break
             else
@@ -82,10 +82,13 @@ jobs:
         working-directory: /builder
         id: archive
         run: |
+          set -xe
           ls -alh ./*
           df -h
           rar a -v1g khadas-android12.rar android12
           ls -alh /builder/*
+          ls -alh ./*
+          df -h
 
       - name: List created files
         working-directory: /builder
