@@ -1,4 +1,4 @@
-name: khadas android 13
+name: khadas android 14
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  khadas-android13:
+  khadas-android14:
     runs-on: ubuntu-latest
 
     steps:
@@ -58,17 +58,17 @@ jobs:
         id: clone
         run: |
           set -xe
-          mkdir -p android13
-          cd android13
+          mkdir -p android14
+          cd android14
           curl https://storage.googleapis.com/git-repo-downloads/repo > repo
           chmod a+x repo
           ls -alh repo
-          ./repo init -u https://github.com/khadas/android_manifest.git -b khadas-edge2-android13
+          ./repo init -u https://github.com/khadas/android_manifest.git -b khadas-edge2-android14
           ls -alh
           MAX_RETRIES=30
           retry_count=0
           while [ $retry_count -lt $MAX_RETRIES ]; do
-            .repo/repo/repo sync -v -c -j8 -n --no-tags --no-clone-bundle | tee -a /builder/khadas-android13.log
+            .repo/repo/repo sync -v -c -j8 -n --no-tags --no-clone-bundle | tee -a /builder/khadas-android14.log
             if [ $? -eq 0 ];then
               break
             else
@@ -83,7 +83,7 @@ jobs:
         working-directory: /builder
         id: archive
         run: |
-          cd android13
+          cd android14
 
           # 检查目录大小
           dir_size=$(du -sb . | cut -f1)
@@ -95,12 +95,12 @@ jobs:
           if [ $dir_size -gt $split_threshold ]; then
           echo "Directory exceeds 1GB, creating split archives..."
           # 创建分卷压缩，每个1G
-          tar -czf - . | split -d -b 1G - ../khadas-android13.tar.gz.part.
+          tar -czf - . | split -d -b 1G - ../khadas-android14.tar.gz.part.
           echo "has_split=true" >> $GITHUB_OUTPUT
           echo "Split archives created"
           else
           echo "Directory under 1GB, creating single archive..."
-          tar -czf ../khadas-android13.tar.gz .
+          tar -czf ../khadas-android14.tar.gz .
           echo "has_split=false" >> $GITHUB_OUTPUT
           echo "Single archive created"
           fi
@@ -115,13 +115,13 @@ jobs:
       - name: Upload Kernel to Release
         uses: ncipollo/release-action@main
         with:
-          tag: khadas-android13
+          tag: khadas-android14
           artifacts: /builder/khadas-android*
           allowUpdates: true
           removeArtifacts: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          body: | # khadas android13源码镜像
+          body: | # khadas android14源码镜像
 
             ## 免责声明
             - **按原样提供**：镜像不作任何保证，使用风险自负
