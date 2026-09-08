@@ -96,12 +96,11 @@ jobs:
         id: archive
         run: |
           set -xe
-          ls -alh ./*
-          df -h
-          tar -cf - --remove-files android12 | pigz -p $(nproc) -1 > archive.tar.gz
-          split -b 1G -d --verbose archive.tar.gz khadas-android12_part_
           ls -alh /builder/*
-          ls -alh ./*
+          df -h
+          tar -cf - --remove-files android12 | pigz -p $(nproc) -1 | split -b 1G -d --verbose - khadas-android12_part_
+          sync
+          ls -alh /builder/*
           df -h
 
       - name: List created files

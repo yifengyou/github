@@ -92,13 +92,13 @@ jobs:
         id: archive
         run: |
           set -xe
-          ls -alh ./*
-          df -h
-          tar -cf - --remove-files android13 | zstd -T0 -3 -o archive.tar.zst
-          split -b 1G -d --verbose archive.tar.zst khadas-android13_part_
           ls -alh /builder/*
-          ls -alh ./*
           df -h
+          tar -cf - --remove-files android13 | zstd -T0 -15 --long=31 | split -b 1G -d --verbose - khadas-android13_part_
+          sync
+          ls -alh /builder/*
+          df -h
+
 
       - name: List created files
         working-directory: /builder
