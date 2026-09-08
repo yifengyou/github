@@ -1,4 +1,4 @@
-name: khadas android 13
+name: khadas android 12(pixz)
 
 on:
   push:
@@ -7,8 +7,12 @@ on:
   repository_dispatch:
   workflow_dispatch:
 
+
+env:
+  TZ: Asia/Shanghai
+
 jobs:
-  khadas-android13:
+  khadas-android12:
     runs-on: ubuntu-22.04
 
     steps:
@@ -47,7 +51,7 @@ jobs:
             firefox clang-13 clang-14 clang-15
           sudo apt autoremove --purge -y
           sudo apt-get install -qq -y git gnupg \
-            curl sudo rar coreutils zstd
+            curl sudo rar coreutils pixz
           sudo apt clean
           lsblk
           df -Th
@@ -67,17 +71,17 @@ jobs:
         id: clone
         run: |
           set -xe
-          mkdir -p android13
-          cd android13
+          mkdir -p android12
+          cd android12
           curl https://storage.googleapis.com/git-repo-downloads/repo > repo
           chmod a+x repo
           ls -alh repo
-          ./repo init -u https://github.com/khadas/android_manifest.git -b khadas-edge2-android13
+          ./repo init -u https://github.com/khadas/android_manifest.git -b khadas-edge2-android12
           ls -alh
           MAX_RETRIES=30
           RETRY_COUNT=0
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            .repo/repo/repo sync -v -c -j8 -n --no-tags --no-clone-bundle | tee -a /builder/khadas-android13.log
+            .repo/repo/repo sync -v -c -j8 -n --no-tags --no-clone-bundle | tee -a /builder/khadas-android12.log
             if [ $? -eq 0 ];then
               break
             else
@@ -94,8 +98,8 @@ jobs:
           set -xe
           ls -alh ./*
           df -h
-          tar -cf - --remove-files android13 | zstd -T0 -3 -o archive.tar.zst
-          split -b 1G -d --verbose archive.tar.zst khadas-android13_part_
+          tar -cf - --remove-files android12 | pixz -p $(nproc) -1 > archive.tar.xz
+          split -b 1G -d --verbose archive.tar.xz khadas-android12_part_
           ls -alh /builder/*
           ls -alh ./*
           df -h
@@ -110,13 +114,13 @@ jobs:
       - name: Upload Kernel to Release
         uses: ncipollo/release-action@main
         with:
-          tag: khadas-android13
+          tag: khadas-android12-pixz
           artifacts: /builder/khadas-android*
           allowUpdates: true
           removeArtifacts: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          body: | # khadas android13源码镜像
+          body: | # khadas android12源码镜像
 
             ## 免责声明
             - **按原样提供**：镜像不作任何保证，使用风险自负

@@ -47,7 +47,7 @@ jobs:
             firefox clang-13 clang-14 clang-15
           sudo apt autoremove --purge -y
           sudo apt-get install -qq -y git gnupg \
-            curl sudo rar
+            curl sudo rar coreutils zstd
           sudo apt clean
           lsblk
           df -Th
@@ -91,10 +91,14 @@ jobs:
         working-directory: /builder
         id: archive
         run: |
+          set -xe
           ls -alh ./*
           df -h
-          rar a -v1g khadas-android14.rar android14
+          tar -cf - --remove-files android14 | zstd -T0 -3 -o archive.tar.zst
+          split -b 1G -d --verbose archive.tar.zst khadas-android14_part_
           ls -alh /builder/*
+          ls -alh ./*
+          df -h
 
       - name: List created files
         working-directory: /builder
