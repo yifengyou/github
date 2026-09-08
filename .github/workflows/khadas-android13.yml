@@ -1,0 +1,114 @@
+name: khadas android 13
+
+on:
+  workflow_dispatch:
+
+jobs:
+  khadas-android13:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show environment
+        id: basic_info
+        run: |
+          nproc
+          uname -a
+          cat /etc/*release
+          free -h
+          mount
+          df -h
+          cat /proc/cpuinfo
+          cat /proc/meminfo
+
+      - name: Create simulated physical disk
+        run: |
+          mnt_size=$(expr $(df -h /mnt | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 1)
+          root_size=$(expr $(df -h / | tail -1 | awk '{print $4}' | sed 's/[[:alpha:]]//g' | sed 's/\..*//') - 4)
+          sudo truncate -s "${mnt_size}"G /mnt/mnt.img
+          sudo truncate -s "${root_size}"G /root.img
+          sudo losetup /dev/loop6 /mnt/mnt.img
+          sudo losetup /dev/loop7 /root.img
+          sudo pvcreate /dev/loop6
+          sudo pvcreate /dev/loop7
+          sudo vgcreate github /dev/loop6 /dev/loop7
+          sudo lvcreate -n runner -l 100%FREE github
+          sudo mkfs.xfs /dev/github/runner
+          sudo mkdir -p /builder
+          sudo mount /dev/github/runner /builder
+          sudo chown -R runner.runner /builder
+          df -Th
+          sudo apt-get update
+          sudo apt-get install -qq -y git-core gnupg \
+            flex bison build-essential zip curl  \
+            zlib1g-dev gcc-multilib g++-multilib \
+            libc6-dev-i386 x11proto-core-dev \
+            unzip sudo
+          git config --global user.name yifengyou
+          git config --global user.email 842056007@qq.com
+
+      - name: Clone target repository
+        working-directory: /builder
+        id: clone
+        run: |
+          set -x
+          mkdir -p android13
+          cd android13
+          curl https://storage.googleapis.com/git-repo-downloads/repo > repo
+          chmod a+x repo
+          ls -alh repo
+          ./repo init -u https://github.com/khadas/android_manifest.git -b khadas-edge2-android13
+          ls -alh
+          .repo/repo/repo sync -c -j8 -v
+          ls -alh
+
+      - name: Create archive with split if needed
+        working-directory: /builder
+        id: archive
+        run: |
+          cd android13
+
+          # 检查目录大小
+          dir_size=$(du -sb . | cut -f1)
+          echo "Directory size: $dir_size bytes"
+
+          # 设置分卷阈值 (10GB)
+          split_threshold=1000000000
+
+          if [ $dir_size -gt $split_threshold ]; then
+          echo "Directory exceeds 1GB, creating split archives..."
+          # 创建分卷压缩，每个1G
+          tar -czf - . | split -d -b 1G - ../khadas-android13.tar.gz.part.
+          echo "has_split=true" >> $GITHUB_OUTPUT
+          echo "Split archives created"
+          else
+          echo "Directory under 1GB, creating single archive..."
+          tar -czf ../khadas-android13.tar.gz .
+          echo "has_split=false" >> $GITHUB_OUTPUT
+          echo "Single archive created"
+          fi
+          cd ..
+
+      - name: List created files
+        working-directory: /builder
+        run: |
+          echo "Created archive files:"
+          ls -alh
+
+      - name: Upload Kernel to Release
+        uses: ncipollo/release-action@main
+        with:
+          tag: khadas-android13
+          artifacts: /builder/khadas-android13.tar.gz*
+          allowUpdates: true
+          removeArtifacts: true
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body: | # khadas android13源码镜像
+
+            ## 免责声明
+            - **按原样提供**：镜像不作任何保证，使用风险自负
+            - **无官方关联**：主板厂家和瑞星微无任何关联、无任何商业关联
+            - **安全提示**：请及时更新补丁、修改默认密码、配置防火墙
