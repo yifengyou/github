@@ -7,6 +7,9 @@ on:
   repository_dispatch:
   workflow_dispatch:
 
+env:
+  TZ: Asia/Shanghai
+
 jobs:
   khadas-android13:
     runs-on: ubuntu-22.04
@@ -98,7 +101,6 @@ jobs:
           sync
           ls -alh /builder/*
           df -h
-
 
       - name: List created files
         working-directory: /builder

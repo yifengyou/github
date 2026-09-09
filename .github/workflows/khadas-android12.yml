@@ -1,4 +1,4 @@
-name: khadas android 12(pigz)
+name: khadas android 12
 
 on:
   push:
@@ -6,7 +6,6 @@ on:
       - master
   repository_dispatch:
   workflow_dispatch:
-
 
 env:
   TZ: Asia/Shanghai
@@ -51,7 +50,7 @@ jobs:
             firefox clang-13 clang-14 clang-15
           sudo apt autoremove --purge -y
           sudo apt-get install -qq -y git gnupg \
-            curl sudo rar coreutils pigz
+            curl sudo rar coreutils zstd
           sudo apt clean
           lsblk
           df -Th
@@ -98,7 +97,7 @@ jobs:
           set -xe
           ls -alh /builder/*
           df -h
-          tar -cf - --remove-files android12 | pigz -p $(nproc) -1 | split -b 1G -d --verbose - khadas-android12_part_
+          tar -cf - --remove-files android12 | zstd -T0 -15 --long=31 | split -b 1G -d --verbose - khadas-android12_part_
           sync
           ls -alh /builder/*
           df -h
@@ -113,7 +112,7 @@ jobs:
       - name: Upload Kernel to Release
         uses: ncipollo/release-action@main
         with:
-          tag: khadas-android12-pigz
+          tag: khadas-android12-zstd
           artifacts: /builder/khadas-android*
           allowUpdates: true
           removeArtifacts: true

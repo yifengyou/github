@@ -7,6 +7,9 @@ on:
   repository_dispatch:
   workflow_dispatch:
 
+env:
+  TZ: Asia/Shanghai
+
 jobs:
   khadas-android14:
     runs-on: ubuntu-22.04
@@ -102,13 +105,9 @@ jobs:
       - name: List created files
         working-directory: /builder
         run: |
-          set -xe
-          ls -alh ./*
+          echo "Created archive files:"
           df -h
-          rar a -v1g khadas-android14.rar android14
-          ls -alh /builder/*
           ls -alh ./*
-          df -h
 
       - name: Upload Kernel to Release
         uses: ncipollo/release-action@main
