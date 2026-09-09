@@ -80,7 +80,7 @@ jobs:
           MAX_RETRIES=30
           RETRY_COUNT=0
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-            .repo/repo/repo sync -v -c -j8 -n --no-tags --no-clone-bundle | tee -a /builder/khadas-android12.log
+            .repo/repo/repo sync -v -c -j8 -n --no-tags --no-clone-bundle 2>&1 | tee -a /builder/khadas-android12.log
             if [ $? -eq 0 ];then
               break
             else
@@ -116,12 +116,12 @@ jobs:
           tag: khadas-android12
           artifacts: /builder/khadas-android*
           allowUpdates: true
-          removeArtifacts: true
+          removeArtifacts: false
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
           body: | # khadas android12源码镜像
 
             ## 免责声明
-            - **按原样提供**：镜像不作任何保证，使用风险自负
-            - **无官方关联**：主板厂家和瑞星微无任何关联、无任何商业关联
-            - **安全提示**：请及时更新补丁、修改默认密码、配置防火墙
+            - **按原样提供**：镜像不作任何保证，无任何担保，使用风险由用户自行承担
+            - **无官方关联**：与主板厂商及瑞星微（Rockchip）无任何官方或商业关联
+            - **安全建议**：请及时更新补丁、修改默认密码、配置防火墙
