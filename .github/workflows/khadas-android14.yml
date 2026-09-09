@@ -97,6 +97,7 @@ jobs:
           set -xe
           ls -alh /builder/*
           df -h
+          du -sh android14
           tar -cf - --remove-files android14 | zstd -T0 -15 --long=31 | split -b 1G -d --verbose - khadas-android14_part_
           sync
           ls -alh /builder/*
